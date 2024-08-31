@@ -1,0 +1,9 @@
+images/
+labels/
+venv/
+labels.xlsx
+ml_data/
+*.pt
+runs/
+labels.pkl
+segment.yaml
