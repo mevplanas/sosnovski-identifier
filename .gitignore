@@ -7,3 +7,6 @@ ml_data/
 runs/
 labels.pkl
 segment.yaml
+~$*
+inference/
+__pycache__/
