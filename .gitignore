@@ -10,3 +10,4 @@ segment.yaml
 ~$*
 inference/
 __pycache__/
+.vscode/

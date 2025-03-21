@@ -16,7 +16,7 @@ An ML dataset for a computer vision project is usually comprised of images in th
 
 ![Data Overview](docs/data_cv.png)
 
-## Label example
+### Label example
 
 One example of the label data pair (image file and label file) is shown below.
 
@@ -61,4 +61,94 @@ python3.11 -m venv venv
 source venv/bin/activate # Linux 
 venv\Scripts\activate # Windows
 pip install -r requirements.txt
+```
+
+### Creating the ML input
+
+In order to train your very own model, you need to have the pictures and the labels put into `images/` and `labels/` folders respectively.
+
+For example,
+
+```bash
+images/
+    DJI_0066_W.JPG
+    DJI_0067_W.JPG
+    ...
+labels/
+    DJI_0066_W.txt
+    DJI_0067_W.txt
+    ...
+```
+
+Then, you need to run the command:
+
+```bash
+python -m src.create_ml_input
+```
+
+This command will create a directory called `ml_data` in the same level as the `images` and `labels` directories. This directory will contain the training and validation data in the format that the `YOLO` algorithm expects.
+
+After running the command, you can check the `ml_data` directory to see the training and validation data:
+
+```bash
+ml_data/
+    train/
+        images/
+            DJI_0066_W.jpg
+            DJI_0067_W.jpg
+            ...
+        labels/
+            DJI_0066_W.txt
+            DJI_0067_W.txt
+            ...
+    val/
+        images/
+            DJI_0068_W.jpg
+            DJI_0069_W.jpg
+            ...
+        labels/
+            DJI_0068_W.txt
+            DJI_0069_W.txt
+            ...
+```
+
+### Training the ML model
+
+In order for YOLO to work, the user needs to create a `segment.yaml` in the root directory. If the project on the machine it is running on is via `C:\Users\Admin\projects\sosnovski-identifier`, the file needs to be created in `C:\Users\Admin\projects\sosnovski-identifier\segment.yaml`.
+
+The file contents then are the following:
+
+```yaml
+# Path paramters
+path: C:\Users\Admin\projects\sosnovski-identifier\ml_data
+train: ml_data\train
+val: ml_data\val
+
+# Number of classes
+nc: 1
+
+# Class names
+names: ['sosnovski']
+```
+
+Having the above file, the command to train the model is: 
+
+```bash
+python -m src.train_model
+```
+
+The parameters for the training can be found in the `src/train_model.py` file.
+
+Whenever one triggers a run, a new directory gets created in the `runs/segment/` path in the root directory. The YOLO implementation from ultralytics adds a bunch of metrics and plots there. The most important file, however, is the `runs/segment/<model run id>/weights/best.pt` file, which is the trained model:
+
+```bash
+runs/
+    segment/
+        <model run id>/
+            weights/
+                best.pt
+            results.csv
+            results.png
+            MaskF1_curve.png
+            ...     
 ```
