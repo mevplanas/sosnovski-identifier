@@ -131,7 +131,7 @@ nc: 1
 names: ['sosnovski']
 ```
 
-Having the above file, the command to train the model is: 
+Having the above file, the command to train the model is:
 
 ```bash
 python -m src.train_model
@@ -152,3 +152,13 @@ runs/
             MaskF1_curve.png
             ...     
 ```
+
+## Using the ML model
+
+### Pixel coordinates
+
+Once the model is trained on the data, we can use it to infer the images and get the bounding boxes around the Sosnovski plants. The notebook showcasing this is in the `notebooks/sosnovski_inference_pixels.ipynb` file. 
+
+### GPS coordinates
+
+If we combine the EXIF information (gps and camera information) with the pixel coordinates, we can get the GPS coordinates of the bounding boxes. The notebook showcasing this is in the `notebooks/sosnovski_inference_gps.ipynb` file.
