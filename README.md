@@ -157,7 +157,7 @@ runs/
 
 ### Pixel coordinates
 
-Once the model is trained on the data, we can use it to infer the images and get the bounding boxes around the Sosnovski plants. The notebook showcasing this is in the `notebooks/sosnovski_inference_pixels.ipynb` file. 
+Once the model is trained on the data, we can use it to infer the images and get the bounding boxes around the Sosnovski plants. The notebook showcasing this is in the `notebooks/sosnovski_inference_pixels.ipynb` file.
 
 ### GPS coordinates
 
