@@ -3,7 +3,7 @@ labels/
 venv/
 labels.xlsx
 ml_data/
-*.pt
+yolo*.pt
 runs/
 labels.pkl
 segment.yaml
@@ -11,3 +11,6 @@ segment.yaml
 inference/
 __pycache__/
 .vscode/
+credentials.yaml
+blob_input/
+configuration.yaml
