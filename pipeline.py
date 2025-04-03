@@ -47,10 +47,6 @@ if __name__ == "__main__":
     # Listing all the blobs
     blobs = container_client.list_blobs()
 
-
-     # Listing all the blobs
-    blobs = container_client.list_blobs()
-
     # Only leaving the images
     blobs = [blob for blob in blobs if is_blob_image(blob.name)]
 
