@@ -2,6 +2,7 @@
 import yaml 
 import os
 from tqdm import tqdm 
+import pandas as pd
 
 # Azure blobs
 from azure.storage.blob import BlobServiceClient
@@ -16,9 +17,12 @@ from src.utils import (
     calculate_gsd,
     is_blob_image,
     extract_gps_coordinates,
-    get_relative_altidute,
     extract_focal_length
 )
+
+# Hardcoding the ID Vilnius drone camera parameters 
+SENSOR_WIDTH = 6.4
+SENSOR_HEIGHT = 4.8
 
 if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,10 +49,6 @@ if __name__ == "__main__":
     container_client = blob_service_client.get_container_client(input_container_name)
 
     # Listing all the blobs
-    blobs = container_client.list_blobs()
-
-
-     # Listing all the blobs
     blobs = container_client.list_blobs()
 
     # Only leaving the images
@@ -88,4 +88,73 @@ if __name__ == "__main__":
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
+        # Predicting 
+        results = yolo_model.predict(img, conf=0.05)
+        segments = results[0].masks
 
+        if segments is not None: 
+            # Gathering all the needed information for the Sosnovskies
+            img_w, img_h = img.shape[1], img.shape[0]
+            focal_length = extract_focal_length(path)
+            latitude, longitude, altitude, relative_altitude = extract_gps_coordinates(path)
+            gsd_h, gsd_v = calculate_gsd(
+                relative_altitude,
+                img_w,
+                img_h,
+                SENSOR_WIDTH, 
+                SENSOR_HEIGHT, 
+                focal_length
+                )
+
+            # Creating the gps coordinates
+            polygon_idx = 0
+            for mask in segments:
+                points = mask.xy[0]
+                for point in points:
+                    sosnovskies.append(
+                        (
+                            f"{blob_dir}/{base_name}",
+                            polygon_idx,
+                            pixel_to_gps(
+                                point[0], 
+                                point[1], 
+                                img.shape[1], 
+                                img.shape[0], 
+                                latitude, 
+                                longitude, 
+                                gsd_h, 
+                                gsd_v, 
+                                relative_altitude
+                            )
+                        )
+                    )
+                # Adding an additional last point as the first point
+                sosnovskies.append(
+                    (
+                        f"{blob_dir}/{base_name}",
+                        polygon_idx,
+                        pixel_to_gps(
+                            points[0][0], 
+                            points[0][1], 
+                            img.shape[1], 
+                            img.shape[0], 
+                            latitude, 
+                            longitude, 
+                            gsd_h, 
+                            gsd_v, 
+                            relative_altitude
+                        )
+                    )
+                )
+
+                # Incrementing
+                polygon_idx += 1
+
+        # Clearning the image
+        del img 
+        os.remove(path)
+
+    gps_points_df = pd.DataFrame(sosnovskies, columns=["image_path", "polygon_idx", "gps_coords"])
+    gps_points_df['lat'] = gps_points_df['gps_coords'].apply(lambda x: x[0])
+    gps_points_df['lon'] = gps_points_df['gps_coords'].apply(lambda x: x[1])
+    gps_points_df.drop(columns=['gps_coords'], inplace=True)
