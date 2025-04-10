@@ -127,12 +127,12 @@ def pixel_to_gps(x, y, width, height, lat_center, lon_center, gsd_h, gsd_v, alti
 # Defining the function that calculates the diff in pixels to meters
 # GSD - Ground Sampling Distance
 def calculate_gsd(
-        height_from_ground, 
-        image_width, 
-        image_height, 
-        sensor_width, 
-        sensor_height, 
-        focal_length
+        height_from_ground: float, 
+        image_width: int, 
+        image_height: int, 
+        sensor_width: float, 
+        sensor_height: float, 
+        focal_length: float
         ):
     """
     Function that calculates the GSD (Ground Sampling Distance) from pixels to meters
@@ -149,6 +149,15 @@ def calculate_gsd(
         gsd_h (float): Horizontal GSD in meters
         gsd_v (float): Vertical GSD in meters
     """
+    # Ensuring that the parameters are positive numbers 
+    if focal_length is None: 
+        print("Focal length is None")
+        return None, None
+    
+    if height_from_ground <= 0 or image_width <= 0 or image_height <= 0 or sensor_width <= 0 or sensor_height <= 0:
+        print("Invalid parameters: all parameters must be positive numbers")
+        return None, None
+    
     # Calculating the horizontal and vertical GSD
     gsd_h = (height_from_ground * sensor_width) / (focal_length * image_width)
     gsd_v = (height_from_ground * sensor_height) / (focal_length * image_height)
