@@ -75,7 +75,6 @@ def insert_features_to_arcgis(url, features, token=None):
     payload = {
         "features": json.dumps(features),
         "f": "json",
-        "rollbackOnFailure": True,
     }
 
     if token:
@@ -140,6 +139,10 @@ if __name__ == "__main__":
         url=WEB_SERVICE_URL, token=token, where_clause="1=1"
     )
 
+    # arcgis_blobs = query_features_from_arcgis(
+    #     url=WEB_SERVICE_URL, where_clause="1=1", token=None
+    # )
+
     # Extracting the features from the ArcGIS response
     arcgis_blobs = arcgis_blobs.get("features", [])
 
@@ -151,6 +154,8 @@ if __name__ == "__main__":
     # Creating the input directory to store the downloaded images
     input_dir = os.path.join(current_dir, "blob_input")
     os.makedirs(input_dir, exist_ok=True)
+
+    blobs = blobs[0:1]
 
     # Placeholder for the parsed information
     sosnovskies, probabilities, classes = [] , [], []
@@ -181,7 +186,7 @@ if __name__ == "__main__":
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # Predicting
-        results = yolo_model.predict(img, conf=0.05)
+        results = yolo_model.predict(img, conf=0.01)
         segments = results[0].masks
 
         # Get probabilities and classes
