@@ -284,7 +284,7 @@ if __name__ == "__main__":
     gdf["prediction_prob"] = probabilities
     gdf['species'] = classes
 
-    gdf["begin_lifespan_version"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    gdf["beginLifespanVersion"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # gdf["begin_lifespan_version"] = gdf.apply(
     #     lambda x: pd.Timestamp(x["begin_lifespan_version"]).timestamp(), axis=1
