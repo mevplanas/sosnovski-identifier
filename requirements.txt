@@ -11,3 +11,8 @@ defusedxml
 PyYAML==6.0.2
 tqdm==4.66.1
 azure-storage-blob==12.19.0
+shapely
+geopandas
+matplotlib
+mapclassify
+python-dotenv==1.1.0
