@@ -44,6 +44,7 @@ PASSWORD = os.getenv("PASSWORD")
 YOLO_MODEL = os.getenv("YOLO_MODEL")
 INPUT_CONNECTION_STRING = os.getenv("INPUT_CONNECTION_STRING")
 INPUT_CONTAINER_NAME = os.getenv("INPUT_CONTAINER_NAME")
+PREDICTION_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD"))
 
 
 """Define utils functions"""
@@ -186,7 +187,7 @@ if __name__ == "__main__":
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # Predicting
-        results = yolo_model.predict(img, conf=0.01)
+        results = yolo_model.predict(img, conf=PREDICTION_THRESHOLD)
         segments = results[0].masks
 
         # Get probabilities and classes
