@@ -156,7 +156,7 @@ if __name__ == "__main__":
     input_dir = os.path.join(current_dir, "blob_input")
     os.makedirs(input_dir, exist_ok=True)
 
-    blobs = blobs[0:1]
+    blobs = blobs[0:10]
 
     # Placeholder for the parsed information
     sosnovskies, probabilities, classes = [] , [], []
