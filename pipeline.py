@@ -111,8 +111,6 @@ def wrangling_geometry(coords):
 
 
 if __name__ == "__main__":
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-
     # Extracting the YOLO model name
     yolo_model_path = os.path.join("ml_models", YOLO_MODEL)
     yolo_model = YOLO(yolo_model_path)
@@ -153,7 +151,7 @@ if __name__ == "__main__":
         blobs = [blob for blob in blobs if blob.name not in arcgis_blob_names]
 
     # Creating the input directory to store the downloaded images
-    input_dir = os.path.join(current_dir, "blob_input")
+    input_dir = os.path.join("blob_input")
     os.makedirs(input_dir, exist_ok=True)
 
     blobs = blobs[0:10]
