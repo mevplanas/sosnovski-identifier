@@ -157,6 +157,8 @@ if __name__ == "__main__":
     # Placeholder for the parsed information
     sosnovskies, probabilities, classes = [] , [], []
 
+    blobs = blobs[:10]
+
     # Iterating over the blobs
     for blob in tqdm(blobs):
         # Getting the base name
@@ -282,9 +284,9 @@ if __name__ == "__main__":
 
     gdf["beginLifespanVersion"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # gdf["begin_lifespan_version"] = gdf.apply(
-    #     lambda x: pd.Timestamp(x["begin_lifespan_version"]).timestamp(), axis=1
-    # )
+    gdf["beginLifespanVersion"] = gdf.apply(
+        lambda x: pd.Timestamp(x["beginLifespanVersion"]).timestamp(), axis=1
+    )
 
     # Creating the geometry column
     gdf["geometry"] = gdf.apply(
@@ -296,11 +298,11 @@ if __name__ == "__main__":
     gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs="EPSG:4326")
     gdf = gdf.to_crs("EPSG:3346")
     gdf["population_size"] = round(gdf.geometry.area, 2)
-    gdf['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    gdf['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # gdf['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # gdf['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Create a unique ID for each prediction UUID
-    gdf['prediction_id'] = gdf.apply(lambda x: str(uuid.uuid4()), axis=1)
+    # # Create a unique ID for each prediction UUID
+    # gdf['prediction_id'] = gdf.apply(lambda x: str(uuid.uuid4()), axis=1)
 
     # Drop unnecessary columns
     gdf = gdf.drop(columns=["lat", "lon", "polygon_idx"])
