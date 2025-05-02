@@ -179,8 +179,13 @@ if __name__ == "__main__":
             f.write(blob_client.download_blob().readall())
 
         # Reading and ploting the image
-        img = cv2.imread(path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        try:
+            img = cv2.imread(path)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            print(f"Error reading image {base_name}: {e}")
+            os.remove(path)
+            continue
 
         # Predicting
         results = yolo_model.predict(img, conf=PREDICTION_THRESHOLD)
