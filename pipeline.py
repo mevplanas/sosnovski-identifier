@@ -1,5 +1,6 @@
 # Configs and utility
 import os
+import argparse
 from datetime import datetime
 from tqdm import tqdm 
 import pandas as pd
@@ -84,19 +85,31 @@ def insert_features_to_arcgis(url, features, token=None):
     response = requests.post(add_features_url, data=payload)
     return response.json()
 
+
 def query_features_from_arcgis(url, token, where_clause):
     query_url = f"{url}/query"
-    params = {
-        "where": where_clause,
-        "outFields": "image_path",
-        "f": "json"}
-    if token:
-        params["token"] = token
-    response = requests.get(query_url, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        response.raise_for_status()
+    all_features = []
+    for _ in range(0, 100000, 2000):
+        params = {
+            "where": where_clause,
+            "outFields": "image_path",
+            "resultOffset": _,
+            "f": "json",
+        }
+        if token:
+            params["token"] = token
+        response = requests.get(query_url, params=params)
+        if response.status_code == 200:
+            arcgis_blobs = response.json()
+            arcgis_blobs = arcgis_blobs.get("features", [])
+            if not arcgis_blobs:
+                return all_features
+            all_features.extend(arcgis_blobs)
+            print(f"{arcgis_blobs} items fetched")
+        else:
+            response.raise_for_status()
+
+    return all_features
 
 
 def wrangling_geometry(coords):
@@ -111,6 +124,19 @@ def wrangling_geometry(coords):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+    # add true false argument for the pipeline
+    parser.add_argument("--count", type=int, default=0, help="Number of images to process")
+    parser.add_argument(
+        "--token", action="store_true", help="Run the pipeline"
+    )
+    parser.add_argument(
+        "--no-token", action="store_false", help="Do not run the pipeline"
+    )
+    
+    parser.set_defaults(token=False)
+    args = parser.parse_args()
+
     # Extracting the YOLO model name
     yolo_model_path = os.path.join("ml_models", YOLO_MODEL)
     yolo_model = YOLO(yolo_model_path)
@@ -132,18 +158,15 @@ if __name__ == "__main__":
     # Dropping the blobs that are in the 00_UNSORTED directory
     blobs = [blob for blob in blobs if "00_UNSORTED" not in blob.name]
 
-    token = authenticate(PORTAL_URL, USERNAME, PASSWORD)
+    if args.token:
+        token = authenticate(PORTAL_URL, USERNAME, PASSWORD)
+    else:
+        token = None
+
     # Querying the ArcGIS for the blobs that are already there
     arcgis_blobs = query_features_from_arcgis(
         url=WEB_SERVICE_URL, token=token, where_clause="1=1"
     )
-
-    # arcgis_blobs = query_features_from_arcgis(
-    #     url=WEB_SERVICE_URL, where_clause="1=1", token=None
-    # )
-
-    # Extracting the features from the ArcGIS response
-    arcgis_blobs = arcgis_blobs.get("features", [])
 
     # Filtering out the blobs that are already in ArcGIS
     if arcgis_blobs:
@@ -156,6 +179,8 @@ if __name__ == "__main__":
 
     # Placeholder for the parsed information
     sosnovskies, probabilities, classes = [] , [], []
+
+    blobs = blobs[: args.count] if args.count > 0 else blobs
 
     # Iterating over the blobs
     for blob in tqdm(blobs):
@@ -285,11 +310,11 @@ if __name__ == "__main__":
     gdf["prediction_prob"] = probabilities
     gdf['species'] = classes
 
-    gdf["beginLifespanVersion"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    gdf["begin_lifespan_version"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # gdf["begin_lifespan_version"] = gdf.apply(
     #     lambda x: pd.Timestamp(x["begin_lifespan_version"]).timestamp(), axis=1
-    # )
+    # )beginLifespanVersion
 
     # Creating the geometry column
     gdf["geometry"] = gdf.apply(
@@ -304,8 +329,8 @@ if __name__ == "__main__":
     gdf['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     gdf['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Create a unique ID for each prediction UUID
-    gdf['prediction_id'] = gdf.apply(lambda x: str(uuid.uuid4()), axis=1)
+    # # Create a unique ID for each prediction UUID
+    gdf['prediction_id'] = gdf.apply(lambda x: "{" + str(uuid.uuid4()) + "}", axis=1)
 
     # Drop unnecessary columns
     gdf = gdf.drop(columns=["lat", "lon", "polygon_idx"])
@@ -335,7 +360,11 @@ if __name__ == "__main__":
         # Append the feature to the list
         agol_features.append(agol_feature)
 
+    # Generate token if needed
+    if args.token:
+        token = authenticate(PORTAL_URL, USERNAME, PASSWORD)
+    else:
+        token = None
+
     # Insert features into ArcGIS
-    token = authenticate(PORTAL_URL, USERNAME, PASSWORD)
     insert_features_to_arcgis(WEB_SERVICE_URL, agol_features, token)
-    # insert_features_to_arcgis(WEB_SERVICE_URL,  agol_features)
