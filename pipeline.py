@@ -109,7 +109,7 @@ if __name__ == "__main__":
             if gsd_h is None or gsd_v is None:
                 print(f"Skipping image {base_name} due to invalid GSD values.")
                 continue
-            
+
             # Creating the gps coordinates
             polygon_idx = 0
             for mask in segments:
