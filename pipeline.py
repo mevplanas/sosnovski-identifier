@@ -1,13 +1,14 @@
 # Configs and utility
 import os
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from tqdm import tqdm 
 import pandas as pd
 import uuid
 import requests
 import json
 from dotenv import load_dotenv
+from geopy.distance import geodesic
 
 # geospatial libraries
 import geopandas as gpd
@@ -45,7 +46,7 @@ PASSWORD = os.getenv("PASSWORD")
 YOLO_MODEL = os.getenv("YOLO_MODEL")
 INPUT_CONNECTION_STRING = os.getenv("INPUT_CONNECTION_STRING")
 INPUT_CONTAINER_NAME = os.getenv("INPUT_CONTAINER_NAME")
-PREDICTION_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD"))
+PREDICTION_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD", 0.3))
 
 
 """Define utils functions"""
@@ -122,6 +123,43 @@ def wrangling_geometry(coords):
         rings.append(ring)
     return {"rings": rings}
 
+def get_weather_data() -> dict: 
+    """
+    Queries the weather data from the API
+    """
+    # Getting the current date 
+    current_date = datetime.now().strftime("%Y-%m-%d") 
+
+    # Subtracting the current date by 1 day
+    yesterday_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # Formatting the date to be of the form YYYY-MM-DD
+    formatted_date = datetime.strptime(yesterday_date, "%Y-%m-%d").strftime("%Y-%m-%d")
+
+    # Querying the API 
+    response = requests.get(
+        f"https://miesto-plauciai-functions.azurewebsites.net/api/meteoApi?code=NWXJ5u1MDN02kxp5Ys-S-7xOBi5VQCVzPOvyqFmUqARpAzFuB9QkbQ==&timestamp={formatted_date}"
+    )
+
+    output = {
+        'wind_speed': 0.0,
+        'wind_direction': 0.0
+    }
+
+    if response.status_code == 200:
+        data = response.json()
+        # Extracting the relevant data
+        output["wind_speed"] = data['windSpeed'] # M/S
+        output["wind_direction"] = data['windDirection'] # degrees; 0 from north, 90 from east
+
+    return output
+
+def push_point(lat, lon, bearing_deg, push_distance_m = 5):
+    # geodesic().destination expects km and bearing clockwise from north
+    km = push_distance_m / 1000.0
+    dest = geodesic(kilometers=km).destination((lat, lon), bearing_deg) 
+
+    return dest.latitude, dest.longitude
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
@@ -145,6 +183,11 @@ if __name__ == "__main__":
     blob_service_client = BlobServiceClient.from_connection_string(
         INPUT_CONNECTION_STRING
     )
+
+    # Getting the current weather data 
+    weather_data = get_weather_data()
+    wind_speed = weather_data['wind_speed']
+    wind_direction = weather_data['wind_direction']
 
     # Getting the container
     container_client = blob_service_client.get_container_client(INPUT_CONTAINER_NAME)
@@ -302,6 +345,20 @@ if __name__ == "__main__":
 
     # Dropping the gps_coords column
     gps_points_df.drop(columns=["gps_coords"], inplace=True)
+
+    # Creating another - forecasted polygon 
+    gps_points_df_forecasted = gps_points_df.copy()
+    gps_points_df_forecasted['pushed'] = gps_points_df_forecasted.apply(
+        lambda x: push_point(
+            x['lat'],
+            x['lon'],
+            wind_direction
+        ),
+        axis=1
+    )
+    gps_points_df_forecasted['lat'] = gps_points_df_forecasted['pushed'].apply(lambda x: x[0])
+    gps_points_df_forecasted['lon'] = gps_points_df_forecasted['pushed'].apply(lambda x: x[1])
+    gps_points_df_forecasted.drop(columns=["pushed"], inplace=True)
 
     # Grouping the data by image path and polygon index
     gdf = gps_points_df.groupby(['image_path', 'polygon_idx']).agg(list).reset_index()

@@ -16,3 +16,5 @@ blob_input/
 configuration.yaml
 notebooks/ml_models/
 .env
+config.json
+*.MP4
