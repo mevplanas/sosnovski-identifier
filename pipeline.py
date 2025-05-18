@@ -47,9 +47,8 @@ YOLO_MODEL = os.getenv("YOLO_MODEL")
 INPUT_CONNECTION_STRING = os.getenv("INPUT_CONNECTION_STRING")
 INPUT_CONTAINER_NAME = os.getenv("INPUT_CONTAINER_NAME")
 PREDICTION_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD", 0.3))
+METEO_API_KEY = os.getenv("METEO_API_KEY")
 
-
-"""Define utils functions"""
 def authenticate(portal_url, username, password):
     token_url = f"{portal_url}/sharing/rest/generateToken"
     payload = {
@@ -138,7 +137,7 @@ def get_weather_data() -> dict:
 
     # Querying the API 
     response = requests.get(
-        f"https://miesto-plauciai-functions.azurewebsites.net/api/meteoApi?code=NWXJ5u1MDN02kxp5Ys-S-7xOBi5VQCVzPOvyqFmUqARpAzFuB9QkbQ==&timestamp={formatted_date}"
+        f"https://miesto-plauciai-functions.azurewebsites.net/api/meteoApi?code={METEO_API_KEY}&timestamp={formatted_date}"
     )
 
     output = {
