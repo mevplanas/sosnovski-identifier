@@ -14,3 +14,5 @@ __pycache__/
 credentials.yaml
 blob_input/
 configuration.yaml
+notebooks/ml_models/
+.env
