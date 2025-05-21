@@ -204,10 +204,10 @@ def df_to_gdf(df: pd.DataFrame, min_area: float) -> gpd.GeoDataFrame:
     gdf = gdf.to_crs("EPSG:3346")
 
     # Calculating the area of the polygons
-    gdf["population_size"] = round(gdf.geometry.area, 2)
+    gdf["populationSize"] = round(gdf.geometry.area, 2)
 
     # Dropping the polygons that are smaller than the minimum area
-    gdf = gdf[gdf["population_size"] > min_area]
+    gdf = gdf[gdf["populationSize"] > min_area]
     gdf.reset_index(drop=True, inplace=True)
 
     # Adding the created_at and updated_at columns
@@ -424,7 +424,7 @@ if __name__ == "__main__":
 
     # Drop unnecessary columns
     gdf = gdf.drop(columns=["lat", "lon", "polygon_idx"])
-    gdf_forecasted = gdf_forecasted.drop(columns=["lat", "lon", "polygon_idx", "image_path", "population_size"])
+    gdf_forecasted = gdf_forecasted.drop(columns=["lat", "lon", "polygon_idx", "image_path", "populationSize"])
 
     # Transform the GeoDataFrame to a dictionary format suitable for ArcGIS
     agol_features = gdf_to_arcgis(gdf)
