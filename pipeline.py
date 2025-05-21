@@ -401,8 +401,9 @@ if __name__ == "__main__":
     df = gps_points_df.groupby(["image_path", "polygon_idx"]).agg(list).reset_index()
     df_forecasted = gps_points_df_forecasted.groupby(["image_path", "polygon_idx"]).agg(list).reset_index()
 
-    # Add image url
-    df["image_url"] = df.apply(lambda x: f"{container_url}/{x['image_path']}", axis=1)
+    # TODO uncomment this when azure blob storage is ready
+    # # Add image url
+    # df["image_url"] = df.apply(lambda x: f"{container_url}/{x['image_path']}", axis=1)
 
     # Assigning probabilities and classes to the dataframe
     df["prediction_prob"] = probabilities
