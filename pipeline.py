@@ -316,10 +316,16 @@ if __name__ == "__main__":
             # Gathering all the needed information for the Sosnovskies
             img_w, img_h = img.shape[1], img.shape[0]
             focal_length = extract_focal_length(path)
-            latitude, longitude, altitude, relative_altitude = extract_gps_coordinates(path)
+            try:
+                latitude, longitude, altitude, relative_altitude = extract_gps_coordinates(path)
+            except Exception as e:
+                print(f"Error extracting GPS coordinates from {base_name}: {e}")
+                os.remove(path)
+                continue
             gsd_h, gsd_v = calculate_gsd(relative_altitude, img_w, img_h, SENSOR_WIDTH, SENSOR_HEIGHT, focal_length)
 
             if gsd_h is None or gsd_v is None:
+                os.remove(path)
                 print(f"Skipping image {base_name} due to invalid GSD values.")
                 continue
 
