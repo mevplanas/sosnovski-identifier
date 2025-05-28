@@ -18,3 +18,4 @@ notebooks/ml_models/
 .env
 config.json
 *.MP4
+data
