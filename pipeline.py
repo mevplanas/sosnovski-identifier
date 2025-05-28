@@ -220,6 +220,7 @@ def df_to_gdf(df: pd.DataFrame, min_area: float) -> gpd.GeoDataFrame:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     # add true false argument for the pipeline
+    parser.add_argument("--input_path", type=str, default="blob_input", help="Path to the input directory")
     parser.add_argument("--count", type=int, default=0, help="Number of images to process")
     parser.add_argument("--token", action="store_true", help="Run the pipeline")
     parser.add_argument("--no-token", action="store_false", help="Do not run the pipeline")
@@ -268,7 +269,7 @@ if __name__ == "__main__":
         blobs = [blob for blob in blobs if blob.name not in arcgis_blob_names]
 
     # Creating the input directory to store the downloaded images
-    input_dir = os.path.join("blob_input")
+    input_dir = os.path.join(args.input_path)
     os.makedirs(input_dir, exist_ok=True)
 
     # Placeholder for the parsed information
