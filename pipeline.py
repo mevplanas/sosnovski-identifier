@@ -211,8 +211,8 @@ def df_to_gdf(df: pd.DataFrame, min_area: float) -> gpd.GeoDataFrame:
     gdf.reset_index(drop=True, inplace=True)
 
     # Adding the created_at and updated_at columns
-    gdf["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    gdf["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    gdf["created_at"] = int(datetime.now().timestamp()) * 1000
+    gdf["updated_at"] = int(datetime.now().timestamp()) * 1000
 
     return gdf
 
@@ -415,8 +415,8 @@ if __name__ == "__main__":
     df["prediction_prob"] = probabilities
     df["species"] = classes
 
-    # Add date of record creation
-    df["beginLifespanVersion"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Add date of record creation as unix timestamp
+    df["beginLifespanVersion"] = int(datetime.now().timestamp()) * 1000
 
     # Creating GeoDataFrames
     gdf = df_to_gdf(df, min_area=0.00)
@@ -443,5 +443,9 @@ if __name__ == "__main__":
         token = None
 
     # Insert features into ArcGIS
-    insert_features_to_arcgis(PREDICTIONS_SERVICE_URL, agol_features, token)
-    insert_features_to_arcgis(FORECAST_SERVICE_URL, agol_features_forecasted, token)
+    pred_response = insert_features_to_arcgis(PREDICTIONS_SERVICE_URL, agol_features, token)
+    forecast_response = insert_features_to_arcgis(FORECAST_SERVICE_URL, agol_features_forecasted, token)
+
+    # Print the responses
+    print("Prediction response:", pred_response)
+    print("Forecast response:", forecast_response)
